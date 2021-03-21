@@ -25,7 +25,7 @@ public class Game extends JFrame implements KeyListener {
     public static final int SCREEN_HEIGHT = 600;
 
     public static final double BALL_RADIUS = 10.0;
-    public static final double BALL_VELOCITY = 0.7;
+    public static final double BALL_VELOCITY = 0.2;
 
     public static final double PADDLE_WIDTH = 60.0;
     public static final double PADDLE_HEIGHT = 20.0;
@@ -34,15 +34,17 @@ public class Game extends JFrame implements KeyListener {
     public static final double BLOCK_WIDTH = 60.0;
     public static final double BLOCK_HEIGHT = 20.0;
 
-    public static final int COUNT_BLOCKS_X = 11;
+    public static final int COUNT_BLOCKS_X = 6;
     public static final int COUNT_BLOCKS_Y = 4;
 
-    public static final int PLAYER_LIVES = 5;
+    public static final int PLAYER_LIVES = 2;
 
     public static final double FT_SLICE = 1.0;
     public static final double FT_STEP = 1.0;
 
     private static final String FONT = "Courier New";
+
+    public static final int GOLDEN_BRICK_COUNT = COUNT_BLOCKS_Y;
 
     /* GAME VARIABLES */
 
@@ -108,7 +110,7 @@ public class Game extends JFrame implements KeyListener {
 
         void increaseScore() {
             score++;
-            if (score == (COUNT_BLOCKS_X * COUNT_BLOCKS_Y)) {
+            if (score == (COUNT_BLOCKS_X * COUNT_BLOCKS_Y - GOLDEN_BRICK_COUNT)) {
                 win = true;
                 text = "You have won! \nYour score was: " + score
                         + "\n\nPress Enter to restart";
@@ -208,6 +210,12 @@ public class Game extends JFrame implements KeyListener {
 
         boolean destroyed = false;
 
+        boolean isGolden = false;
+
+        boolean isFalling = false;
+
+        int goldenBrickCounter = 3;
+
         Brick(double x, double y) {
             this.x = x;
             this.y = y;
@@ -215,8 +223,23 @@ public class Game extends JFrame implements KeyListener {
             this.sizeY = BLOCK_HEIGHT;
         }
 
+        Brick(double x, double y, boolean isGolden) {
+            this.x = x;
+            this.y = y;
+            this.isGolden = isGolden;
+            this.sizeX = BLOCK_WIDTH;
+            this.sizeY = BLOCK_HEIGHT;
+        }
+
         void draw(Graphics g) {
-            g.setColor(Color.YELLOW);
+            if (isFalling) {
+                this.y++;
+            }
+            if (isGolden) {
+                g.setColor((this.goldenBrickCounter < 2) ? Color.GREEN : Color.CYAN);
+            } else {
+                g.setColor(Color.YELLOW);
+            }
             g.fillRect((int) left(), (int) top(), (int) sizeX, (int) sizeY);
         }
     }
@@ -251,6 +274,7 @@ public class Game extends JFrame implements KeyListener {
                 velocityY = BALL_VELOCITY;
             } else if (bottom() > SCREEN_HEIGHT) {
                 velocityY = -BALL_VELOCITY;
+                velocityX = 0;
                 x = paddle.x;
                 y = paddle.y - 50;
                 scoreBoard.die();
@@ -292,12 +316,20 @@ public class Game extends JFrame implements KeyListener {
     }
 
     void testCollision(Brick mBrick, Ball mBall, ScoreBoard scoreboard) {
-        if (!isIntersecting(mBrick, mBall))
+        if (!isIntersecting(mBrick, mBall) || mBrick.isFalling)
             return;
 
-        mBrick.destroyed = true;
+        if (mBrick.isGolden) {
+            if (mBrick.goldenBrickCounter < 1) {
+                scoreboard.win = true;
+            } else {
+                mBrick.goldenBrickCounter--;
+            }
+        } else {
+            scoreboard.increaseScore();
+            mBrick.isFalling = true;
+        }
 
-        scoreboard.increaseScore();
 
         double overlapLeft = mBall.right() - mBrick.left();
         double overlapRight = mBrick.right() - mBall.left();
@@ -317,14 +349,23 @@ public class Game extends JFrame implements KeyListener {
         }
     }
 
+    void testCollision(Brick mBrick, Paddle paddle, ScoreBoard scoreBoard) {
+        if (!isIntersecting(mBrick, paddle)) {
+            return;
+        }
+        mBrick.destroyed = true;
+        scoreBoard.die();
+    }
+
     void initializeBricks(List<Brick> bricks) {
         // deallocate old bricks
         bricks.clear();
 
-        for (int iX = 0; iX < COUNT_BLOCKS_X; ++iX) {
-            for (int iY = 0; iY < COUNT_BLOCKS_Y; ++iY) {
-                bricks.add(new Brick((iX + 1) * (BLOCK_WIDTH + 3) + 22,
-                        (iY + 2) * (BLOCK_HEIGHT + 3) + 20));
+        int centerBlock = (int) Math.floor(COUNT_BLOCKS_X / 2);
+        for (int iY = 0; iY < COUNT_BLOCKS_Y; ++iY) {
+            for (int iX = 0; iX < COUNT_BLOCKS_X; ++iX) {
+                bricks.add(new Brick((iX + 1) * (BLOCK_WIDTH + 3) + 22 + BLOCK_WIDTH * iX,
+                        (iY + 2) * (BLOCK_HEIGHT + 3) + 20, iX + 1 == centerBlock));
             }
         }
     }
@@ -354,6 +395,11 @@ public class Game extends JFrame implements KeyListener {
 
         running = true;
 
+        ball.x = SCREEN_WIDTH / 2;
+        ball.y = SCREEN_HEIGHT / 2;
+        ball.velocityX = BALL_VELOCITY;
+        ball.velocityY = BALL_VELOCITY;
+
         while (running) {
 
             long time1 = System.currentTimeMillis();
@@ -381,6 +427,8 @@ public class Game extends JFrame implements KeyListener {
                     scoreboard.updateScoreboard();
                     ball.x = SCREEN_WIDTH / 2;
                     ball.y = SCREEN_HEIGHT / 2;
+                    ball.velocityX = BALL_VELOCITY;
+                    ball.velocityY = BALL_VELOCITY;
                     paddle.x = SCREEN_WIDTH / 2;
                 }
             }
@@ -416,7 +464,8 @@ public class Game extends JFrame implements KeyListener {
             while (it.hasNext()) {
                 Brick brick = it.next();
                 testCollision(brick, ball, scoreboard);
-                if (brick.destroyed) {
+                testCollision(brick, paddle, scoreboard);
+                if (brick.bottom() > SCREEN_HEIGHT + BLOCK_HEIGHT || brick.destroyed) {
                     it.remove();
                 }
             }
@@ -496,7 +545,7 @@ public class Game extends JFrame implements KeyListener {
 
     }
 
-    public static class RunMe implements Runnable{
+    public static class RunMe implements Runnable {
         JFrame jFrame;
 
         public RunMe(JFrame jFrame) {
