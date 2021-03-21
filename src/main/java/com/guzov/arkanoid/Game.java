@@ -1,5 +1,7 @@
 package com.guzov.arkanoid;
 
+import com.guzov.arkanoid.game.*;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -42,8 +44,6 @@ public class Game extends JFrame implements KeyListener {
     public static final double FT_SLICE = 1.0;
     public static final double FT_STEP = 1.0;
 
-    private static final String FONT = "Courier New";
-
     public static final int GOLDEN_BRICK_COUNT = COUNT_BLOCKS_Y;
 
     /* GAME VARIABLES */
@@ -53,252 +53,11 @@ public class Game extends JFrame implements KeyListener {
 
     private Paddle paddle = new Paddle(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50);
     private Ball ball = new Ball(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-    private List<Brick> bricks = new ArrayList<Game.Brick>();
+    private List<Brick> bricks = new ArrayList<Brick>();
     private ScoreBoard scoreboard = new ScoreBoard();
 
     private double lastFt;
     private double currentSlice;
-
-    abstract class GameObject {
-        abstract double left();
-
-        abstract double right();
-
-        abstract double top();
-
-        abstract double bottom();
-    }
-
-    class Rectangle extends GameObject {
-
-        double x, y;
-        double sizeX;
-        double sizeY;
-
-        double left() {
-            return x - sizeX / 2.0;
-        }
-
-        double right() {
-            return x + sizeX / 2.0;
-        }
-
-        double top() {
-            return y - sizeY / 2.0;
-        }
-
-        double bottom() {
-            return y + sizeY / 2.0;
-        }
-
-    }
-
-    class ScoreBoard {
-
-        int score = 0;
-        int lives = PLAYER_LIVES;
-        boolean win = false;
-        boolean gameOver = false;
-        String text = "";
-
-        Font font;
-
-        ScoreBoard() {
-            font = new Font(FONT, Font.PLAIN, 12);
-            text = "Welcome to Arkanoid Java version";
-        }
-
-        void increaseScore() {
-            score++;
-            if (score == (COUNT_BLOCKS_X * COUNT_BLOCKS_Y - GOLDEN_BRICK_COUNT)) {
-                win = true;
-                text = "You have won! \nYour score was: " + score
-                        + "\n\nPress Enter to restart";
-            } else {
-                updateScoreboard();
-            }
-        }
-
-        void die() {
-            lives--;
-            if (lives == 0) {
-                gameOver = true;
-                text = "You have lost! \nYour score was: " + score
-                        + "\n\nPress Enter to restart";
-            } else {
-                updateScoreboard();
-            }
-        }
-
-        void updateScoreboard() {
-            text = "Score: " + score + "  Lives: " + lives;
-        }
-
-        void draw(Graphics g) {
-            if (win || gameOver) {
-                font = font.deriveFont(50f);
-                FontMetrics fontMetrics = g.getFontMetrics(font);
-                g.setColor(Color.WHITE);
-                g.setFont(font);
-                int titleHeight = fontMetrics.getHeight();
-                int lineNumber = 1;
-                for (String line : text.split("\n")) {
-                    int titleLen = fontMetrics.stringWidth(line);
-                    g.drawString(line, (SCREEN_WIDTH / 2) - (titleLen / 2),
-                            (SCREEN_HEIGHT / 4) + (titleHeight * lineNumber));
-                    lineNumber++;
-
-                }
-            } else {
-                font = font.deriveFont(34f);
-                FontMetrics fontMetrics = g.getFontMetrics(font);
-                g.setColor(Color.WHITE);
-                g.setFont(font);
-                int titleLen = fontMetrics.stringWidth(text);
-                int titleHeight = fontMetrics.getHeight();
-                g.drawString(text, (SCREEN_WIDTH / 2) - (titleLen / 2),
-                        titleHeight + 5);
-
-            }
-        }
-
-    }
-
-    class Paddle extends Rectangle {
-
-        double velocity = 0.0;
-
-        public Paddle(double x, double y) {
-            this.x = x;
-            this.y = y;
-            this.sizeX = PADDLE_WIDTH;
-            this.sizeY = PADDLE_HEIGHT;
-        }
-
-        void update() {
-            x += velocity * FT_STEP;
-        }
-
-        void stopMove() {
-            velocity = 0.0;
-        }
-
-        void moveLeft() {
-            if (left() > 0.0) {
-                velocity = -PADDLE_VELOCITY;
-            } else {
-                velocity = 0.0;
-            }
-        }
-
-        void moveRight() {
-            if (right() < SCREEN_WIDTH) {
-                velocity = PADDLE_VELOCITY;
-            } else {
-                velocity = 0.0;
-            }
-        }
-
-        void draw(Graphics g) {
-            g.setColor(Color.RED);
-            g.fillRect((int) (left()), (int) (top()), (int) sizeX, (int) sizeY);
-        }
-
-    }
-
-    class Brick extends Rectangle {
-
-        boolean destroyed = false;
-
-        boolean isGolden = false;
-
-        boolean isFalling = false;
-
-        int goldenBrickCounter = 3;
-
-        Brick(double x, double y) {
-            this.x = x;
-            this.y = y;
-            this.sizeX = BLOCK_WIDTH;
-            this.sizeY = BLOCK_HEIGHT;
-        }
-
-        Brick(double x, double y, boolean isGolden) {
-            this.x = x;
-            this.y = y;
-            this.isGolden = isGolden;
-            this.sizeX = BLOCK_WIDTH;
-            this.sizeY = BLOCK_HEIGHT;
-        }
-
-        void draw(Graphics g) {
-            if (isFalling) {
-                this.y++;
-            }
-            if (isGolden) {
-                g.setColor((this.goldenBrickCounter < 2) ? Color.GREEN : Color.CYAN);
-            } else {
-                g.setColor(Color.YELLOW);
-            }
-            g.fillRect((int) left(), (int) top(), (int) sizeX, (int) sizeY);
-        }
-    }
-
-    class Ball extends GameObject {
-
-        double x, y;
-        double radius = BALL_RADIUS;
-        double velocityX = BALL_VELOCITY;
-        double velocityY = BALL_VELOCITY;
-
-        Ball(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        void draw(Graphics g) {
-            g.setColor(Color.RED);
-            g.fillOval((int) left(), (int) top(), (int) radius * 2,
-                    (int) radius * 2);
-        }
-
-        void update(ScoreBoard scoreBoard, Paddle paddle) {
-            x += velocityX * FT_STEP;
-            y += velocityY * FT_STEP;
-
-            if (left() < 0)
-                velocityX = BALL_VELOCITY;
-            else if (right() > SCREEN_WIDTH)
-                velocityX = -BALL_VELOCITY;
-            if (top() < 0) {
-                velocityY = BALL_VELOCITY;
-            } else if (bottom() > SCREEN_HEIGHT) {
-                velocityY = -BALL_VELOCITY;
-                velocityX = 0;
-                x = paddle.x;
-                y = paddle.y - 50;
-                scoreBoard.die();
-            }
-
-        }
-
-        double left() {
-            return x - radius;
-        }
-
-        double right() {
-            return x + radius;
-        }
-
-        double top() {
-            return y - radius;
-        }
-
-        double bottom() {
-            return y + radius;
-        }
-
-    }
 
     boolean isIntersecting(GameObject mA, GameObject mB) {
         return mA.right() >= mB.left() && mA.left() <= mB.right()
@@ -538,27 +297,8 @@ public class Game extends JFrame implements KeyListener {
 
     public static void main(String[] args) {
         Game game = new Game();
-//        RunMe runMe = new RunMe(game);
-//        Thread thread = new Thread(runMe);
-//        thread.start();
         game.run();
 
-    }
-
-    public static class RunMe implements Runnable {
-        JFrame jFrame;
-
-        public RunMe(JFrame jFrame) {
-            this.jFrame = jFrame;
-        }
-
-        public void run() {
-            try {
-                ImageHandler.TakeScrrenShot(jFrame);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
 }
