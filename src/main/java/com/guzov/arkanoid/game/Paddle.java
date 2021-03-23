@@ -1,6 +1,7 @@
 package com.guzov.arkanoid.game;
 
 import java.awt.*;
+import java.util.Objects;
 
 import static com.guzov.arkanoid.Game.*;
 
@@ -44,4 +45,16 @@ public class Paddle extends Rectangle {
         g.fillRect((int) (left()), (int) (top()), (int) sizeX, (int) sizeY);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Paddle)) return false;
+        Paddle paddle = (Paddle) o;
+        return this.x == paddle.x && this.y == paddle.y && Double.compare(paddle.velocity, velocity) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.x, this.y, velocity);
+    }
 }

@@ -1,10 +1,9 @@
 package com.guzov.arkanoid;
 
 import com.guzov.arkanoid.game.*;
+import com.guzov.arkanoid.ml.State;
 
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
@@ -16,6 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JFrame;
+
+import static com.guzov.arkanoid.game.GameObject.isIntersecting;
 
 public class Game extends JFrame implements KeyListener {
 
@@ -39,7 +40,7 @@ public class Game extends JFrame implements KeyListener {
     public static final int COUNT_BLOCKS_X = 6;
     public static final int COUNT_BLOCKS_Y = 4;
 
-    public static final int PLAYER_LIVES = 2;
+    public static final int PLAYER_LIVES = 1;
 
     public static final double FT_SLICE = 1.0;
     public static final double FT_STEP = 1.0;
@@ -59,10 +60,6 @@ public class Game extends JFrame implements KeyListener {
     private double lastFt;
     private double currentSlice;
 
-    boolean isIntersecting(GameObject mA, GameObject mB) {
-        return mA.right() >= mB.left() && mA.left() <= mB.right()
-                && mA.bottom() >= mB.top() && mA.top() <= mB.bottom();
-    }
 
     void testCollision(Paddle mPaddle, Ball mBall) {
         if (!isIntersecting(mPaddle, mBall))
@@ -209,8 +206,41 @@ public class Game extends JFrame implements KeyListener {
 
     }
 
-    private void update() {
+    public ScoreBoard runML(boolean display) {
+        if(display){
+            BufferStrategy bf = this.getBufferStrategy();
+            Graphics g = bf.getDrawGraphics();
+            g.setColor(Color.black);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
 
+        running = true;
+
+        ball.x = SCREEN_WIDTH / 2;
+        ball.y = SCREEN_HEIGHT / 2;
+        ball.velocityX = BALL_VELOCITY;
+        ball.velocityY = BALL_VELOCITY;
+
+        while (!scoreboard.gameOver || !scoreboard.win){
+            update();
+
+            State state = new State(ball, paddle, bricks);
+            if (display) {
+                drawScene(ball, bricks, scoreboard);
+            }
+
+            // to simulate low FPS
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return scoreboard;
+    }
+
+    private void update() {
+        scoreboard.nextRound();
         currentSlice += lastFt;
 
         for (; currentSlice >= FT_SLICE; currentSlice -= FT_SLICE) {

@@ -11,6 +11,8 @@ public class ScoreBoard {
     public int lives = PLAYER_LIVES;
     public boolean win = false;
     public boolean gameOver = false;
+    public int roundCount = 0;
+
     String text = "";
 
     Font font;
@@ -72,5 +74,9 @@ public class ScoreBoard {
                     titleHeight + 5);
 
         }
+    }
+
+    public void nextRound(){
+        roundCount++;
     }
 }
