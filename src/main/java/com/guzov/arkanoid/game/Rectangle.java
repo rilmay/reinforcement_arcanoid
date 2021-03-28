@@ -2,7 +2,6 @@ package com.guzov.arkanoid.game;
 
 public class Rectangle extends GameObject {
 
-    public double x, y;
     public double sizeX;
     public double sizeY;
 

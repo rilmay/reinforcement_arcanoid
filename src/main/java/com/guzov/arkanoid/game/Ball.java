@@ -3,11 +3,10 @@ package com.guzov.arkanoid.game;
 import java.awt.*;
 import java.util.Objects;
 
-import static com.guzov.arkanoid.Game.*;
+import static com.guzov.arkanoid.game.Сonstants.*;
 
 public class Ball extends GameObject {
 
-    public double x, y;
     public double radius = BALL_RADIUS;
     public double velocityX = BALL_VELOCITY;
     public double velocityY = BALL_VELOCITY;

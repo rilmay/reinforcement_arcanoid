@@ -1,11 +1,13 @@
 package com.guzov.arkanoid;
 
-import com.guzov.arkanoid.game.*;
-import com.guzov.arkanoid.ml.State;
+import com.guzov.arkanoid.game.Ball;
+import com.guzov.arkanoid.game.Brick;
+import com.guzov.arkanoid.game.Paddle;
+import com.guzov.arkanoid.game.ScoreBoard;
+import com.guzov.arkanoid.ml.MLState;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Toolkit;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
@@ -14,38 +16,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.JFrame;
-
 import static com.guzov.arkanoid.game.GameObject.isIntersecting;
+import static com.guzov.arkanoid.game.Сonstants.*;
 
 public class Game extends JFrame implements KeyListener {
-
-    private static final long serialVersionUID = 1L;
-
-    /* CONSTANTS */
-
-    public static final int SCREEN_WIDTH = 800;
-    public static final int SCREEN_HEIGHT = 600;
-
-    public static final double BALL_RADIUS = 10.0;
-    public static final double BALL_VELOCITY = 0.2;
-
-    public static final double PADDLE_WIDTH = 60.0;
-    public static final double PADDLE_HEIGHT = 20.0;
-    public static final double PADDLE_VELOCITY = 0.6;
-
-    public static final double BLOCK_WIDTH = 60.0;
-    public static final double BLOCK_HEIGHT = 20.0;
-
-    public static final int COUNT_BLOCKS_X = 6;
-    public static final int COUNT_BLOCKS_Y = 4;
-
-    public static final int PLAYER_LIVES = 1;
-
-    public static final double FT_SLICE = 1.0;
-    public static final double FT_STEP = 1.0;
-
-    public static final int GOLDEN_BRICK_COUNT = COUNT_BLOCKS_Y;
 
     /* GAME VARIABLES */
 
@@ -207,7 +181,7 @@ public class Game extends JFrame implements KeyListener {
     }
 
     public ScoreBoard runML(boolean display) {
-        if(display){
+        if (display) {
             BufferStrategy bf = this.getBufferStrategy();
             Graphics g = bf.getDrawGraphics();
             g.setColor(Color.black);
@@ -221,19 +195,17 @@ public class Game extends JFrame implements KeyListener {
         ball.velocityX = BALL_VELOCITY;
         ball.velocityY = BALL_VELOCITY;
 
-        while (!scoreboard.gameOver || !scoreboard.win){
+        while (!scoreboard.gameOver || !scoreboard.win) {
+            MLState MLState = new MLState(ball, paddle, bricks, SCREEN_WIDTH);
             update();
 
-            State state = new State(ball, paddle, bricks);
             if (display) {
                 drawScene(ball, bricks, scoreboard);
-            }
-
-            // to simulate low FPS
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
         return scoreboard;

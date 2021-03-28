@@ -3,8 +3,8 @@ package com.guzov.arkanoid.game;
 import java.awt.*;
 import java.util.Objects;
 
-import static com.guzov.arkanoid.Game.BLOCK_HEIGHT;
-import static com.guzov.arkanoid.Game.BLOCK_WIDTH;
+import static com.guzov.arkanoid.game.Сonstants.BLOCK_HEIGHT;
+import static com.guzov.arkanoid.game.Сonstants.BLOCK_WIDTH;
 
 public class Brick extends Rectangle {
 

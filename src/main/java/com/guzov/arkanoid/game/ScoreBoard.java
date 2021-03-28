@@ -2,7 +2,7 @@ package com.guzov.arkanoid.game;
 
 import java.awt.*;
 
-import static com.guzov.arkanoid.Game.*;
+import static com.guzov.arkanoid.game.Сonstants.*;
 
 public class ScoreBoard {
     private static final String FONT = "Courier New";
@@ -76,7 +76,7 @@ public class ScoreBoard {
         }
     }
 
-    public void nextRound(){
+    public void nextRound() {
         roundCount++;
     }
 }

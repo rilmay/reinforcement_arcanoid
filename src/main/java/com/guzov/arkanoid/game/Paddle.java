@@ -3,7 +3,7 @@ package com.guzov.arkanoid.game;
 import java.awt.*;
 import java.util.Objects;
 
-import static com.guzov.arkanoid.Game.*;
+import static com.guzov.arkanoid.game.Сonstants.*;
 
 public class Paddle extends Rectangle {
 
