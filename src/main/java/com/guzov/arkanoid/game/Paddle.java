@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import static com.guzov.arkanoid.game.Сonstants.*;
 
-public class Paddle extends Rectangle {
+public class Paddle extends Rectangle implements Cloneable{
 
     public double velocity = 0.0;
 
@@ -56,5 +56,12 @@ public class Paddle extends Rectangle {
     @Override
     public int hashCode() {
         return Objects.hash(this.x, this.y, velocity);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Paddle paddle = new Paddle(this.x, this.y);
+        paddle.velocity = this.velocity;
+        return paddle;
     }
 }

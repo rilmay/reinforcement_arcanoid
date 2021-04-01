@@ -6,7 +6,7 @@ import java.util.Objects;
 import static com.guzov.arkanoid.game.Сonstants.BLOCK_HEIGHT;
 import static com.guzov.arkanoid.game.Сonstants.BLOCK_WIDTH;
 
-public class Brick extends Rectangle {
+public class Brick extends Rectangle implements Cloneable{
 
     public boolean destroyed = false;
 
@@ -58,5 +58,17 @@ public class Brick extends Rectangle {
     @Override
     public int hashCode() {
         return Objects.hash(this.x, this.y, destroyed, isGolden, isFalling, goldenBrickCounter);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Brick clone = new Brick(this.x, this.y);
+        clone.sizeX = this.sizeX;
+        clone.sizeY = this.sizeY;
+        clone.destroyed = this.destroyed;
+        clone.isFalling = this.isFalling;
+        clone.isGolden = this.isGolden;
+        clone.goldenBrickCounter = this.goldenBrickCounter;
+        return clone;
     }
 }

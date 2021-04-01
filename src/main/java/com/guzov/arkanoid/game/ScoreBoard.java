@@ -4,7 +4,7 @@ import java.awt.*;
 
 import static com.guzov.arkanoid.game.Сonstants.*;
 
-public class ScoreBoard {
+public class ScoreBoard implements Cloneable{
     private static final String FONT = "Courier New";
 
     public int score = 0;
@@ -78,5 +78,16 @@ public class ScoreBoard {
 
     public void nextRound() {
         roundCount++;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        ScoreBoard clone = new ScoreBoard();
+        clone.score = this.score;
+        clone.lives = this.lives;
+        clone.win = this.win;
+        clone.gameOver = this.gameOver;
+        clone.roundCount = this.roundCount;
+        return clone;
     }
 }

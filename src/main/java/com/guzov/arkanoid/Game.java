@@ -35,7 +35,7 @@ public class Game extends JFrame implements KeyListener {
     private double currentSlice;
 
 
-    void testCollision(Paddle mPaddle, Ball mBall) {
+    public static void testCollision(Paddle mPaddle, Ball mBall) {
         if (!isIntersecting(mPaddle, mBall))
             return;
         mBall.velocityY = -BALL_VELOCITY;
@@ -45,7 +45,7 @@ public class Game extends JFrame implements KeyListener {
             mBall.velocityX = BALL_VELOCITY;
     }
 
-    void testCollision(Brick mBrick, Ball mBall, ScoreBoard scoreboard) {
+    public static void testCollision(Brick mBrick, Ball mBall, ScoreBoard scoreboard) {
         if (!isIntersecting(mBrick, mBall) || mBrick.isFalling)
             return;
 
@@ -79,7 +79,7 @@ public class Game extends JFrame implements KeyListener {
         }
     }
 
-    void testCollision(Brick mBrick, Paddle paddle, ScoreBoard scoreBoard) {
+    public static void testCollision(Brick mBrick, Paddle paddle, ScoreBoard scoreBoard) {
         if (!isIntersecting(mBrick, paddle)) {
             return;
         }
@@ -212,10 +212,16 @@ public class Game extends JFrame implements KeyListener {
     }
 
     private void update() {
+
         scoreboard.nextRound();
         currentSlice += lastFt;
-
+        System.out.println("update started");
         for (; currentSlice >= FT_SLICE; currentSlice -= FT_SLICE) {
+
+            System.out.println("current slice");
+            System.out.println(currentSlice);
+            System.out.println("ft slice");
+            System.out.println(FT_SLICE);
 
             ball.update(scoreboard, paddle);
             paddle.update();
@@ -232,6 +238,7 @@ public class Game extends JFrame implements KeyListener {
             }
 
         }
+        System.out.println("update ended");
     }
 
     private void drawScene(Ball ball, List<Brick> bricks, ScoreBoard scoreboard) {

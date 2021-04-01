@@ -8,7 +8,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class ActionFactory {
-    public static List<Action> getAvailableAcions(double speed, Paddle paddle, int screenWidth) {
+    public static List<Action> getAvailableActions(double speed, Paddle paddle, int screenWidth) {
         int intSpeed = (int) Math.ceil(speed);
         return IntStream
                 .range(-intSpeed, intSpeed)
@@ -18,7 +18,7 @@ public class ActionFactory {
                 .collect(Collectors.toList());
     }
 
-    public static Stream<Action> getAvailableAcionsStream(double speed, Paddle paddle, int screenWidth) {
+    public static Stream<Action> getAvailableActionsStream(double speed, Paddle paddle, int screenWidth) {
         int intSpeed = (int) Math.ceil(speed);
         return IntStream
                 .range(-intSpeed, intSpeed + 1)

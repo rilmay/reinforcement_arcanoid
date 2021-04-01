@@ -5,15 +5,40 @@ import java.util.Objects;
 
 import static com.guzov.arkanoid.game.Сonstants.*;
 
-public class Ball extends GameObject {
+public class Ball extends GameObject implements Cloneable{
 
     public double radius = BALL_RADIUS;
     public double velocityX = BALL_VELOCITY;
     public double velocityY = BALL_VELOCITY;
 
-    public Ball(int x, int y) {
+    public Ball(double x, double y) {
         this.x = x;
         this.y = y;
+    }
+
+
+    public double getRadius() {
+        return radius;
+    }
+
+    public void setRadius(double radius) {
+        this.radius = radius;
+    }
+
+    public double getVelocityX() {
+        return velocityX;
+    }
+
+    public void setVelocityX(double velocityX) {
+        this.velocityX = velocityX;
+    }
+
+    public double getVelocityY() {
+        return velocityY;
+    }
+
+    public void setVelocityY(double velocityY) {
+        this.velocityY = velocityY;
     }
 
     public void draw(Graphics g) {
@@ -72,5 +97,14 @@ public class Ball extends GameObject {
     @Override
     public int hashCode() {
         return Objects.hash(x, y, velocityX, velocityY);
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        Ball clone = new Ball(this.x, this.y);
+        clone.setVelocityX(this.velocityX);
+        clone.setVelocityY(this.velocityY);
+        clone.setRadius(this.radius);
+        return clone;
     }
 }
