@@ -28,8 +28,18 @@ public class QModel {
         this.gameState = gameState;
     }
 
+    public Action decision() {
+        if (training && Math.random() < EPS) {
+            return getRandomAction();
+        } else {
+            return getBestAction();
+        }
+    }
+
     private double getReward(MLState mlState) {
-        return mlState.nearestFallingBrickLocation.distance - mlState.ballLocation.distance * 1.1;
+        int nearistFallingBrickDist =
+                mlState.nearestFallingBrickLocation == null ? 0: mlState.nearestFallingBrickLocation.distance;
+        return mlState.ballLocation.distance * (-1.5) + nearistFallingBrickDist;
     }
 
     private double getScoreAfterAction(Action action) {
@@ -61,7 +71,7 @@ public class QModel {
         return q.getOrDefault(MLState, 0d);
     }
 
-    private void updateScore() {
+    public void updateScore() {
         MLState mlState = new MLState(gameState);
         double score = getScore(mlState);
         score = score + ALPHA * (getReward(mlState) + GAMMA * getBestActionAndScore().score - score);

@@ -87,7 +87,7 @@ public class GameState {
 
     public GameState imitateGame(Action action){
         GameState clonedGame = cloneGame();
-        clonedGame.getPaddle().velocity = action.getPaddleVelocity();
+        ActionFactory.applyAction(action, clonedGame);
         clonedGame.updateGame();
         return clonedGame;
     }

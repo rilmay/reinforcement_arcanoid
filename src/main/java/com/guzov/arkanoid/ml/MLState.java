@@ -11,7 +11,7 @@ public class MLState {
 
     ObjectLocationNextToOther ballLocation;
     ObjectLocationNextToOther nearestFallingBrickLocation;
-    int paddleLocationComparedToWidth;
+    //int paddleLocationComparedToWidth;
     int ballVelocityX;
     int ballVelocityY;
 
@@ -26,8 +26,10 @@ public class MLState {
     private void initialize(Ball ball, Paddle paddle, List<Brick> bricks, int screenWidth) {
         Brick nearestFalling = Util.findNearestFallingBrick(paddle, bricks);
         this.ballLocation = new ObjectLocationNextToOther(ball, paddle);
-        this.nearestFallingBrickLocation = new ObjectLocationNextToOther(nearestFalling, paddle);
-        paddleLocationComparedToWidth = Util.percentFromNumber(paddle.x, screenWidth);
+        if(nearestFalling != null) {
+            this.nearestFallingBrickLocation = new ObjectLocationNextToOther(nearestFalling, paddle);
+        }
+        //paddleLocationComparedToWidth = Util.percentFromNumber(paddle.x, screenWidth);
         this.ballVelocityX = (int) ball.velocityX;
         this.ballVelocityY = (int) ball.velocityY;
     }
@@ -37,8 +39,7 @@ public class MLState {
         if (this == o) return true;
         if (!(o instanceof MLState)) return false;
         MLState MLState = (MLState) o;
-        return paddleLocationComparedToWidth == MLState.paddleLocationComparedToWidth &&
-                ballVelocityX == MLState.ballVelocityX &&
+        return  ballVelocityX == MLState.ballVelocityX &&
                 ballVelocityY == MLState.ballVelocityY &&
                 Objects.equals(ballLocation, MLState.ballLocation) &&
                 Objects.equals(nearestFallingBrickLocation, MLState.nearestFallingBrickLocation);
@@ -46,6 +47,6 @@ public class MLState {
 
     @Override
     public int hashCode() {
-        return Objects.hash(ballLocation, nearestFallingBrickLocation, paddleLocationComparedToWidth, ballVelocityX, ballVelocityY);
+        return Objects.hash(ballLocation, nearestFallingBrickLocation, ballVelocityX, ballVelocityY);
     }
 }

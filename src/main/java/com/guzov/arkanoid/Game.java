@@ -4,7 +4,10 @@ import com.guzov.arkanoid.game.Ball;
 import com.guzov.arkanoid.game.Brick;
 import com.guzov.arkanoid.game.Paddle;
 import com.guzov.arkanoid.game.ScoreBoard;
-import com.guzov.arkanoid.ml.MLState;
+import com.guzov.arkanoid.ml.Action;
+import com.guzov.arkanoid.ml.ActionFactory;
+import com.guzov.arkanoid.ml.GameState;
+import com.guzov.arkanoid.ml.QModel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -180,7 +183,7 @@ public class Game extends JFrame implements KeyListener {
 
     }
 
-    public ScoreBoard runML(boolean display) {
+    public ScoreBoard runML(boolean display, int maximumSteps) {
         if (display) {
             BufferStrategy bf = this.getBufferStrategy();
             Graphics g = bf.getDrawGraphics();
@@ -195,18 +198,27 @@ public class Game extends JFrame implements KeyListener {
         ball.velocityX = BALL_VELOCITY;
         ball.velocityY = BALL_VELOCITY;
 
-        while (!scoreboard.gameOver || !scoreboard.win) {
-            MLState MLState = new MLState(ball, paddle, bricks, SCREEN_WIDTH);
-            update();
+        GameState gameState =
+                new GameState(ball, paddle, bricks, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_HEIGHT - 50, scoreboard);
+        QModel qModel = new QModel(gameState);
+        int steps = 0;
+
+        while (!scoreboard.gameOver || !scoreboard.win || maximumSteps < steps) {
+            Action action = qModel.decision();
+            ActionFactory.applyAction(action, gameState);
+            updateMl();
+            qModel.updateScore();
 
             if (display) {
+                System.out.println("risunok");
                 drawScene(ball, bricks, scoreboard);
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    Thread.sleep(10);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
+            steps++;
         }
         return scoreboard;
     }
@@ -215,14 +227,7 @@ public class Game extends JFrame implements KeyListener {
 
         scoreboard.nextRound();
         currentSlice += lastFt;
-        System.out.println("update started");
         for (; currentSlice >= FT_SLICE; currentSlice -= FT_SLICE) {
-
-            System.out.println("current slice");
-            System.out.println(currentSlice);
-            System.out.println("ft slice");
-            System.out.println(FT_SLICE);
-
             ball.update(scoreboard, paddle);
             paddle.update();
             testCollision(paddle, ball);
@@ -236,9 +241,23 @@ public class Game extends JFrame implements KeyListener {
                     it.remove();
                 }
             }
-
         }
-        System.out.println("update ended");
+    }
+
+    private void updateMl(){
+        ball.update(scoreboard, paddle);
+        paddle.update();
+        testCollision(paddle, ball);
+
+        Iterator<Brick> it = bricks.iterator();
+        while (it.hasNext()) {
+            Brick brick = it.next();
+            testCollision(brick, ball, scoreboard);
+            testCollision(brick, paddle, scoreboard);
+            if (brick.bottom() > SCREEN_HEIGHT + BLOCK_HEIGHT || brick.destroyed) {
+                it.remove();
+            }
+        }
     }
 
     private void drawScene(Ball ball, List<Brick> bricks, ScoreBoard scoreboard) {
@@ -306,7 +325,8 @@ public class Game extends JFrame implements KeyListener {
 
     public static void main(String[] args) {
         Game game = new Game();
-        game.run();
+        //game.run();
+        game.runML(true, 2000);
 
     }
 

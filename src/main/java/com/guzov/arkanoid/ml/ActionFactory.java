@@ -32,4 +32,8 @@ public class ActionFactory {
         return destinationX >= 0 && destinationX <= screenWidth;
 
     }
+
+    public static void applyAction(Action action, GameState gameState) {
+        gameState.getPaddle().velocity = action.getPaddleVelocity();
+    }
 }
