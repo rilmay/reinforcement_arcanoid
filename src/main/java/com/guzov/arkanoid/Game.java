@@ -18,6 +18,8 @@ import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.guzov.arkanoid.game.GameObject.isIntersecting;
 import static com.guzov.arkanoid.game.Сonstants.*;
@@ -30,9 +32,12 @@ public class Game extends JFrame implements KeyListener {
     private boolean running = false;
 
     private Paddle paddle = new Paddle(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50);
-    private Ball ball = new Ball(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+    private List<Ball> balls =
+            IntStream.range(1, 4).boxed().map(val -> new Ball(SCREEN_WIDTH / val, SCREEN_HEIGHT / val)).collect(Collectors.toList());
     private List<Brick> bricks = new ArrayList<Brick>();
     private ScoreBoard scoreboard = new ScoreBoard();
+    private static Boolean isPlaying = true;
+    public QModel qModel;
 
     private double lastFt;
     private double currentSlice;
@@ -98,7 +103,7 @@ public class Game extends JFrame implements KeyListener {
         for (int iY = 0; iY < COUNT_BLOCKS_Y; ++iY) {
             for (int iX = 0; iX < COUNT_BLOCKS_X; ++iX) {
                 bricks.add(new Brick((iX + 1) * (BLOCK_WIDTH + 3) + 22 + BLOCK_WIDTH * iX,
-                        (iY + 2) * (BLOCK_HEIGHT + 3) + 20, iX + 1 == centerBlock));
+                        (iY + 2) * (BLOCK_HEIGHT + 3) + 20, false));
             }
         }
     }
@@ -115,7 +120,7 @@ public class Game extends JFrame implements KeyListener {
 
         this.createBufferStrategy(2);
 
-        initializeBricks(bricks);
+        //initializeBricks(bricks);
 
     }
 
@@ -128,6 +133,7 @@ public class Game extends JFrame implements KeyListener {
 
         running = true;
 
+        Ball ball = this.balls.get(0);
         ball.x = SCREEN_WIDTH / 2;
         ball.y = SCREEN_HEIGHT / 2;
         ball.velocityX = BALL_VELOCITY;
@@ -193,27 +199,38 @@ public class Game extends JFrame implements KeyListener {
 
         running = true;
 
-        ball.x = SCREEN_WIDTH / 2;
-        ball.y = SCREEN_HEIGHT / 2;
-        ball.velocityX = BALL_VELOCITY;
-        ball.velocityY = BALL_VELOCITY;
 
         GameState gameState =
-                new GameState(ball, paddle, bricks, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_HEIGHT - 50, scoreboard);
-        QModel qModel = new QModel(gameState);
+                new GameState(balls, paddle, bricks, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_HEIGHT - 50, scoreboard);
+
+        if(qModel == null){
+            qModel = new QModel(gameState);
+        }
+
         int steps = 0;
 
-        while (!scoreboard.gameOver || !scoreboard.win || maximumSteps < steps) {
+        while (maximumSteps > steps) {
+            if(!isPlaying){
+                break;
+            }
             Action action = qModel.decision();
             ActionFactory.applyAction(action, gameState);
             updateMl();
             qModel.updateScore();
 
+            if(steps > 100000 && qModel.training){
+                System.out.println("I want to be here");
+                qModel.setTraining(false);
+
+
+                List<Brick> bricks = new ArrayList<>();
+                this.initializeBricks(bricks);
+                this.bricks = bricks;
+            }
             if (display) {
-                System.out.println("risunok");
-                drawScene(ball, bricks, scoreboard);
+                drawScene(balls, bricks, scoreboard);
 //                try {
-//                    Thread.sleep(10);
+//                    Thread.sleep(3);
 //                } catch (InterruptedException e) {
 //                    e.printStackTrace();
 //                }
@@ -228,14 +245,14 @@ public class Game extends JFrame implements KeyListener {
         scoreboard.nextRound();
         currentSlice += lastFt;
         for (; currentSlice >= FT_SLICE; currentSlice -= FT_SLICE) {
-            ball.update(scoreboard, paddle);
+            balls.forEach(value -> value.update(scoreboard, paddle));
             paddle.update();
-            testCollision(paddle, ball);
+            balls.forEach(value -> testCollision(paddle, value));
 
             Iterator<Brick> it = bricks.iterator();
             while (it.hasNext()) {
                 Brick brick = it.next();
-                testCollision(brick, ball, scoreboard);
+                balls.forEach(value -> testCollision(brick, value, scoreboard));
                 testCollision(brick, paddle, scoreboard);
                 if (brick.bottom() > SCREEN_HEIGHT + BLOCK_HEIGHT || brick.destroyed) {
                     it.remove();
@@ -245,19 +262,49 @@ public class Game extends JFrame implements KeyListener {
     }
 
     private void updateMl(){
-        ball.update(scoreboard, paddle);
+        balls.forEach(value -> value.update(scoreboard, paddle));
         paddle.update();
-        testCollision(paddle, ball);
+        balls.forEach(value -> testCollision(paddle, value));
 
         Iterator<Brick> it = bricks.iterator();
         while (it.hasNext()) {
             Brick brick = it.next();
-            testCollision(brick, ball, scoreboard);
+            balls.forEach(value -> testCollision(brick, value, scoreboard));
             testCollision(brick, paddle, scoreboard);
             if (brick.bottom() > SCREEN_HEIGHT + BLOCK_HEIGHT || brick.destroyed) {
                 it.remove();
             }
         }
+    }
+
+    private void drawScene(List<Ball> balls, List<Brick> bricks, ScoreBoard scoreboard) {
+        // Code for the drawing goes here.
+        BufferStrategy bf = this.getBufferStrategy();
+        Graphics g = null;
+
+        try {
+
+            g = bf.getDrawGraphics();
+
+            g.setColor(Color.black);
+            g.fillRect(0, 0, getWidth(), getHeight());
+
+            Graphics finalG = g;
+            balls.forEach(ball1 -> ball1.draw(finalG));
+            paddle.draw(g);
+            for (Brick brick : bricks) {
+                brick.draw(g);
+            }
+            scoreboard.draw(g);
+
+        } finally {
+            g.dispose();
+        }
+
+        bf.show();
+
+        Toolkit.getDefaultToolkit().sync();
+
     }
 
     private void drawScene(Ball ball, List<Brick> bricks, ScoreBoard scoreboard) {
@@ -294,7 +341,9 @@ public class Game extends JFrame implements KeyListener {
             running = false;
         }
         if (event.getKeyCode() == KeyEvent.VK_ENTER) {
-            tryAgain = true;
+            System.out.println("enter");
+            isPlaying = false;
+            //tryAgain = true;
         }
         switch (event.getKeyCode()) {
             case KeyEvent.VK_LEFT:
@@ -326,7 +375,8 @@ public class Game extends JFrame implements KeyListener {
     public static void main(String[] args) {
         Game game = new Game();
         //game.run();
-        game.runML(true, 2000);
+        game.runML(true, 500000);
+        //test();
 
     }
 

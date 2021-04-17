@@ -17,7 +17,7 @@ public class Paddle extends Rectangle implements Cloneable{
     }
 
     public void update() {
-        x += velocity * FT_STEP;
+        x += velocity;
     }
 
     public void stopMove() {

@@ -11,7 +11,7 @@ import static com.guzov.arkanoid.game.Сonstants.BLOCK_HEIGHT;
 import static com.guzov.arkanoid.game.Сonstants.SCREEN_HEIGHT;
 
 public class GameState {
-    Ball ball;
+    List<Ball> balls;
     Paddle paddle;
     List<Brick> bricks;
     int screenWidth;
@@ -19,8 +19,8 @@ public class GameState {
     int paddleHeight;
     ScoreBoard scoreBoard;
 
-    public GameState(Ball ball, Paddle paddle, List<Brick> bricks, int screenWidth, int screenHeight, int paddleHeight, ScoreBoard scoreBoard) {
-        this.ball = ball;
+    public GameState(List<Ball> balls, Paddle paddle, List<Brick> bricks, int screenWidth, int screenHeight, int paddleHeight, ScoreBoard scoreBoard) {
+        this.balls = balls;
         this.paddle = paddle;
         this.bricks = bricks;
         this.screenWidth = screenWidth;
@@ -29,12 +29,12 @@ public class GameState {
         this.scoreBoard = scoreBoard;
     }
 
-    public Ball getBall() {
-        return ball;
+    public List<Ball> getBalls() {
+        return balls;
     }
 
-    public void setBall(Ball ball) {
-        this.ball = ball;
+    public void setBall(List<Ball> ball) {
+        this.balls = ball;
     }
 
     public Paddle getPaddle() {
@@ -93,14 +93,14 @@ public class GameState {
     }
 
     private void updateGame() {
-        ball.update(scoreBoard, paddle);
+        balls.forEach(ball -> ball.update(scoreBoard, paddle));
         paddle.update();
-        Game.testCollision(paddle, ball);
+        balls.forEach(ball -> Game.testCollision(paddle, ball));
 
         Iterator<Brick> it = bricks.iterator();
         while (it.hasNext()) {
             Brick brick = it.next();
-            Game.testCollision(brick, ball, scoreBoard);
+            balls.forEach(ball -> Game.testCollision(brick, ball, scoreBoard));
             Game.testCollision(brick, paddle, scoreBoard);
             if (brick.bottom() > SCREEN_HEIGHT + BLOCK_HEIGHT || brick.destroyed) {
                 it.remove();
@@ -110,7 +110,14 @@ public class GameState {
 
     private GameState cloneGame(){
         try {
-            Ball ballClone = (Ball) this.ball.clone();
+            List<Ball> ballsClone = this.balls.stream().map(ball -> {
+                try {
+                    return (Ball) ball.clone();
+                } catch (CloneNotSupportedException e) {
+                    e.printStackTrace();
+                }
+                return ball;
+            }).collect(Collectors.toList());
             Paddle paddleClone = (Paddle) this.paddle.clone();
             List<Brick> bricksClone = this.bricks.stream().map(brick -> {
                 try {
@@ -120,7 +127,7 @@ public class GameState {
                 }
             }).collect(Collectors.toList());
             ScoreBoard scoreBoardClone = (ScoreBoard) this.scoreBoard.clone();
-            GameState clone = new GameState(ballClone, paddleClone, bricksClone, this.screenWidth, this.screenHeight, this.paddleHeight, scoreBoardClone);
+            GameState clone = new GameState(ballsClone, paddleClone, bricksClone, this.screenWidth, this.screenHeight, this.paddleHeight, scoreBoardClone);
             return clone;
         } catch (CloneNotSupportedException e){
             throw  new RuntimeException(e);

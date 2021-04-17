@@ -27,8 +27,14 @@ public class Util {
         return Math.sqrt(Math.pow(gameObject1.x - gameObject2.x, 2) + Math.pow(gameObject1.y - gameObject2.y, 2));
     }
 
-    public static Side getObjectPositionRelatedToAnother(GameObject gameObject, GameObject relatedObject) {
-        return gameObject.x == relatedObject.x ? Side.CENTER : gameObject.x > relatedObject.x ? Side.RIGHT : Side.LEFT;
+    public static Position getObjectPositionRelatedToAnother(GameObject gameObject, GameObject relatedObject) {
+        Position.Vertical vertical =
+                gameObject.y == relatedObject.y ? Position.Vertical.CENTER :
+                        gameObject.y < relatedObject.y ? Position.Vertical.UP : Position.Vertical.DOWN;
+        Position.Horizontal horizontal =
+                gameObject.x == relatedObject.x ? Position.Horizontal.CENTER :
+                        gameObject.x > relatedObject.x ? Position.Horizontal.RIGHT : Position.Horizontal.LEFT;
+        return new Position(vertical, horizontal);
     }
 
     public static int percentFromNumber(double number, double fromNumber) {

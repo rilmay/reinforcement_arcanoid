@@ -33,7 +33,7 @@ public class Brick extends Rectangle implements Cloneable{
 
     public void draw(Graphics g) {
         if (isFalling) {
-            this.y++;
+            this.y += 0.1;
         }
         if (isGolden) {
             g.setColor((this.goldenBrickCounter < 2) ? Color.GREEN : Color.CYAN);

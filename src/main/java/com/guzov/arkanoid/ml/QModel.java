@@ -2,6 +2,8 @@ package com.guzov.arkanoid.ml;
 
 import java.util.*;
 
+import static java.util.stream.Collectors.groupingBy;
+
 public class QModel {
 
     private static final double GAMMA = 0.95;
@@ -20,7 +22,7 @@ public class QModel {
         this.training = training;
     }
 
-    private boolean training = true;
+    public boolean training = true;
 
     private Map<MLState, Double> q = new HashMap<>();
 
@@ -37,9 +39,28 @@ public class QModel {
     }
 
     private double getReward(MLState mlState) {
-        int nearistFallingBrickDist =
-                mlState.nearestFallingBrickLocation == null ? 0: mlState.nearestFallingBrickLocation.distance;
-        return mlState.ballLocation.distance * (-1.5) + nearistFallingBrickDist;
+        boolean brickExisting = mlState.nearestFallingBrickLocation != null;
+        double reward = 0;
+        if (brickExisting &&
+                mlState.nearestFallingBrickLocation.position.vertical != Position.Vertical.DOWN &&
+                mlState.nearestFallingBrickLocation.distance < gameState.getPaddle().sizeX &&
+                mlState.ballLocation.position.vertical != Position.Vertical.DOWN
+        ) {
+            System.out.println("brick is near");
+            reward += mlState.nearestFallingBrickLocation.distance * 0.9;
+        }
+        if ( mlState.ballLocation.position.vertical == Position.Vertical.DOWN) {
+            //System.out.println("ball is down");
+            reward -= gameState.screenWidth * gameState.screenHeight * 100;
+        } else {
+            reward = Math.sqrt(Math.pow(gameState.screenWidth, 2d) + Math.pow(gameState.screenHeight, 2d)) -
+                    mlState.ballLocation.distance;
+        }
+
+        reward *= Math.abs(mlState.paddleLocationComparedToWidth - 0.5) / 2;
+
+
+        return reward;
     }
 
     private double getScoreAfterAction(Action action) {
@@ -48,19 +69,34 @@ public class QModel {
     }
 
     private Action getBestAction() {
+        ActionAndScore actionAndScore = getBestActionAndScore();
+        if(actionAndScore.score != 0) {
+            System.out.println("best action");
+            System.out.println(actionAndScore.action.paddleVelocity);
+            System.out.println(actionAndScore.score);
+        }
         return getBestActionAndScore().action;
     }
 
     private ActionAndScore getBestActionAndScore() {
-        return ActionFactory.getAvailableActionsStream(speed,gameState.paddle, gameState.screenWidth)
+        List<ActionAndScore> actionAndScores =
+                ActionFactory.getAvailableActionsStream(speed, gameState.paddle, gameState.screenWidth)
                 .map(action -> new ActionAndScore(action, getScoreAfterAction(action)))
-                .max(Comparator.comparingDouble(value -> value.score))
-                .orElseThrow(IllegalStateException::new);
+                .collect(groupingBy(ActionAndScore::getScore))
+                .entrySet()
+                .stream()
+                .max(Comparator.comparing(Map.Entry::getKey))
+                .orElseThrow(RuntimeException::new)
+                .getValue();
+        Random rand = new Random();
+        return actionAndScores.get(rand.nextInt(actionAndScores.size()));
     }
 
     private Action getRandomAction() {
         List<Action> availableActions = ActionFactory.getAvailableActions(speed, gameState.paddle, gameState.screenWidth);
-        if(availableActions.size() < 1){
+//        System.out.println("random");
+//        System.out.println(availableActions);
+        if (availableActions.size() < 1) {
             throw new IllegalStateException("no available actions");
         }
         Random rand = new Random();
@@ -78,12 +114,28 @@ public class QModel {
         q.put(mlState, score);
     }
 
-    private class ActionAndScore{
+    private class ActionAndScore {
         Action action;
         Double score;
 
         public ActionAndScore(Action action, Double score) {
             this.action = action;
+            this.score = score;
+        }
+
+        public Action getAction() {
+            return action;
+        }
+
+        public void setAction(Action action) {
+            this.action = action;
+        }
+
+        public Double getScore() {
+            return score;
+        }
+
+        public void setScore(Double score) {
             this.score = score;
         }
     }

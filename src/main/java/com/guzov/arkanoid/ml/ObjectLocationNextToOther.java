@@ -6,11 +6,12 @@ import java.util.Objects;
 
 public class ObjectLocationNextToOther {
     int distance;
-    Side side;
+    Position position;
+
 
     public ObjectLocationNextToOther(GameObject currentObject, GameObject relatedObject) {
         distance = (int) Util.getDistance(currentObject, relatedObject);
-        side = Util.getObjectPositionRelatedToAnother(currentObject, relatedObject);
+        position = Util.getObjectPositionRelatedToAnother(currentObject, relatedObject);
     }
 
     @Override
@@ -19,11 +20,11 @@ public class ObjectLocationNextToOther {
         if (!(o instanceof ObjectLocationNextToOther)) return false;
         ObjectLocationNextToOther that = (ObjectLocationNextToOther) o;
         return distance == that.distance &&
-                side == that.side;
+                position == that.position;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(distance, side);
+        return Objects.hash(distance, position);
     }
 }

@@ -15,4 +15,9 @@ public class Action {
     public void setPaddleVelocity(int paddleVelocity) {
         this.paddleVelocity = paddleVelocity;
     }
+
+    @Override
+    public String toString() {
+        return "action, velocity " + paddleVelocity;
+    }
 }
