@@ -11,13 +11,8 @@ public class MLState {
 
     ObjectLocationNextToOther ballLocation;
     ObjectLocationNextToOther nearestFallingBrickLocation;
-    //int paddleLocationComparedToWidth;
     int ballVelocityX;
     int ballVelocityY;
-
-    public MLState(Ball ball, Paddle paddle, List<Brick> bricks, int screenWidth) {
-        initialize(ball, paddle, bricks, screenWidth);
-    }
 
     public MLState(GameState gameState) {
         initialize(gameState.getBall(), gameState.getPaddle(), gameState.getBricks(), gameState.getScreenWidth());
@@ -29,7 +24,6 @@ public class MLState {
         if(nearestFalling != null) {
             this.nearestFallingBrickLocation = new ObjectLocationNextToOther(nearestFalling, paddle);
         }
-        //paddleLocationComparedToWidth = Util.percentFromNumber(paddle.x, screenWidth);
         this.ballVelocityX = (int) ball.velocityX;
         this.ballVelocityY = (int) ball.velocityY;
     }

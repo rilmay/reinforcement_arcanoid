@@ -25,6 +25,4 @@ public class Сonstants {
 
     public static final double FT_SLICE = 1.0;
     public static final double FT_STEP = 1.0;
-
-    public static final int GOLDEN_BRICK_COUNT = COUNT_BLOCKS_Y;
 }

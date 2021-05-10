@@ -37,9 +37,19 @@ public class QModel {
     }
 
     private double getReward(MLState mlState) {
-        int nearistFallingBrickDist =
-                mlState.nearestFallingBrickLocation == null ? 0: mlState.nearestFallingBrickLocation.distance;
-        return mlState.ballLocation.distance * (-1.5) + nearistFallingBrickDist;
+//        int nearistFallingBrickDist =
+//                mlState.nearestFallingBrickLocation == null ? 0: mlState.nearestFallingBrickLocation.distance;
+//        if(nearistFallingBrickDist > gameState.getPaddle().sizeX * 1.5){
+//            nearistFallingBrickDist = 0;
+//        }
+        double score = 0;
+        if (mlState.nearestFallingBrickLocation == null ||
+            mlState.ballLocation.distance <= mlState.nearestFallingBrickLocation.distance) {
+            score = -mlState.ballLocation.distance;
+        } else {
+            score = mlState.nearestFallingBrickLocation.distance * (-1.3);
+        }
+        return score;
     }
 
     private double getScoreAfterAction(Action action) {

@@ -10,11 +10,12 @@ public class Brick extends Rectangle implements Cloneable{
 
     public boolean destroyed = false;
 
-    public boolean isGolden = false;
-
     public boolean isFalling = false;
 
-    public int goldenBrickCounter = 3;
+    public double fallingVelocity = 0.1;
+
+
+
 
     public Brick(double x, double y) {
         this.x = x;
@@ -23,23 +24,19 @@ public class Brick extends Rectangle implements Cloneable{
         this.sizeY = BLOCK_HEIGHT;
     }
 
-    public Brick(double x, double y, boolean isGolden) {
+    public Brick(double x, double y, boolean isMlMode) {
         this.x = x;
         this.y = y;
-        this.isGolden = isGolden;
         this.sizeX = BLOCK_WIDTH;
         this.sizeY = BLOCK_HEIGHT;
+        this.fallingVelocity = isMlMode? 0.2: 0.9;
     }
 
     public void draw(Graphics g) {
         if (isFalling) {
-            this.y++;
+            this.y += this.fallingVelocity;
         }
-        if (isGolden) {
-            g.setColor((this.goldenBrickCounter < 2) ? Color.GREEN : Color.CYAN);
-        } else {
-            g.setColor(Color.YELLOW);
-        }
+        g.setColor(Color.YELLOW);
         g.fillRect((int) left(), (int) top(), (int) sizeX, (int) sizeY);
     }
 
@@ -49,15 +46,12 @@ public class Brick extends Rectangle implements Cloneable{
         if (!(o instanceof Brick)) return false;
         Brick brick = (Brick) o;
         return this.x == brick.x && this.y == brick.y &&
-                destroyed == brick.destroyed &&
-                isGolden == brick.isGolden &&
-                isFalling == brick.isFalling &&
-                goldenBrickCounter == brick.goldenBrickCounter;
+                destroyed == brick.destroyed && isFalling == brick.isFalling;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.x, this.y, destroyed, isGolden, isFalling, goldenBrickCounter);
+        return Objects.hash(this.x, this.y, destroyed, isFalling);
     }
 
     @Override
@@ -67,8 +61,6 @@ public class Brick extends Rectangle implements Cloneable{
         clone.sizeY = this.sizeY;
         clone.destroyed = this.destroyed;
         clone.isFalling = this.isFalling;
-        clone.isGolden = this.isGolden;
-        clone.goldenBrickCounter = this.goldenBrickCounter;
         return clone;
     }
 }

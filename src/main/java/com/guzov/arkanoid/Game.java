@@ -24,6 +24,7 @@ import static com.guzov.arkanoid.game.Сonstants.*;
 
 public class Game extends JFrame implements KeyListener {
 
+    public static Boolean isMlMode = null;
     /* GAME VARIABLES */
 
     private boolean tryAgain = false;
@@ -32,7 +33,7 @@ public class Game extends JFrame implements KeyListener {
     private Paddle paddle = new Paddle(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50);
     private Ball ball = new Ball(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
     private List<Brick> bricks = new ArrayList<Brick>();
-    private ScoreBoard scoreboard = new ScoreBoard();
+    private ScoreBoard scoreboard;
 
     private double lastFt;
     private double currentSlice;
@@ -52,16 +53,8 @@ public class Game extends JFrame implements KeyListener {
         if (!isIntersecting(mBrick, mBall) || mBrick.isFalling)
             return;
 
-        if (mBrick.isGolden) {
-            if (mBrick.goldenBrickCounter < 1) {
-                scoreboard.win = true;
-            } else {
-                mBrick.goldenBrickCounter--;
-            }
-        } else {
-            scoreboard.increaseScore();
-            mBrick.isFalling = true;
-        }
+        scoreboard.increaseScore();
+        mBrick.isFalling = true;
 
 
         double overlapLeft = mBall.right() - mBrick.left();
@@ -94,11 +87,10 @@ public class Game extends JFrame implements KeyListener {
         // deallocate old bricks
         bricks.clear();
 
-        int centerBlock = (int) Math.floor(COUNT_BLOCKS_X / 2);
         for (int iY = 0; iY < COUNT_BLOCKS_Y; ++iY) {
             for (int iX = 0; iX < COUNT_BLOCKS_X; ++iX) {
                 bricks.add(new Brick((iX + 1) * (BLOCK_WIDTH + 3) + 22 + BLOCK_WIDTH * iX,
-                        (iY + 2) * (BLOCK_HEIGHT + 3) + 20, iX + 1 == centerBlock));
+                        (iY + 2) * (BLOCK_HEIGHT + 3) + 20, isMlMode));
             }
         }
     }
@@ -114,24 +106,18 @@ public class Game extends JFrame implements KeyListener {
         this.setLocationRelativeTo(null);
 
         this.createBufferStrategy(2);
-
-        initializeBricks(bricks);
-
     }
 
     void run() {
+        scoreboard = new ScoreBoard(false);
 
         BufferStrategy bf = this.getBufferStrategy();
         Graphics g = bf.getDrawGraphics();
         g.setColor(Color.black);
         g.fillRect(0, 0, getWidth(), getHeight());
+        initializeBricks(bricks);
 
         running = true;
-
-        ball.x = SCREEN_WIDTH / 2;
-        ball.y = SCREEN_HEIGHT / 2;
-        ball.velocityX = BALL_VELOCITY;
-        ball.velocityY = BALL_VELOCITY;
 
         while (running) {
 
@@ -184,39 +170,41 @@ public class Game extends JFrame implements KeyListener {
     }
 
     public ScoreBoard runML(boolean display, int maximumSteps) {
+        scoreboard = new ScoreBoard(true);
         if (display) {
             BufferStrategy bf = this.getBufferStrategy();
             Graphics g = bf.getDrawGraphics();
             g.setColor(Color.black);
             g.fillRect(0, 0, getWidth(), getHeight());
         }
+        initializeBricks(bricks);
 
         running = true;
-
-        ball.x = SCREEN_WIDTH / 2;
-        ball.y = SCREEN_HEIGHT / 2;
-        ball.velocityX = BALL_VELOCITY;
-        ball.velocityY = BALL_VELOCITY;
 
         GameState gameState =
                 new GameState(ball, paddle, bricks, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_HEIGHT - 50, scoreboard);
         QModel qModel = new QModel(gameState);
         int steps = 0;
 
-        while (!scoreboard.gameOver || !scoreboard.win || maximumSteps < steps) {
+        while (maximumSteps > steps) {
             Action action = qModel.decision();
             ActionFactory.applyAction(action, gameState);
             updateMl();
             qModel.updateScore();
 
+            if(steps % 1500 == 1){
+                System.out.println("Step " + steps + " training " +qModel.isTraining());
+            }
+
+            if(steps > 150000 && qModel.isTraining()) {
+                qModel.setTraining(false);
+
+                this.bricks = new ArrayList<>();
+                this.initializeBricks(bricks);
+            }
+
             if (display) {
-                System.out.println("risunok");
                 drawScene(ball, bricks, scoreboard);
-//                try {
-//                    Thread.sleep(10);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
             }
             steps++;
         }
@@ -320,14 +308,36 @@ public class Game extends JFrame implements KeyListener {
     }
 
     public void keyTyped(KeyEvent arg0) {
+        if(isMlMode == null){
 
+            char key = arg0.getKeyChar();
+            System.out.println(key);
+            if(key == 'm'){
+                isMlMode = true;
+            } else {
+                isMlMode = false;
+            }
+            System.out.println(isMlMode);
+        }
     }
 
     public static void main(String[] args) {
         Game game = new Game();
-        //game.run();
-        game.runML(true, 2000);
+        while (isMlMode == null) {
+            System.out.println("Define Mode!!");
 
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(isMlMode){
+            game.runML(true, 200000);
+        } else {
+            game.run();
+        }
     }
 
 }
